@@ -64,12 +64,12 @@ namespace GagongSyndra
             Menu = menu;
 
             var menuDrawing = new Menu("Drawing", "orb_Draw");
-            menuDrawing.AddItem(new MenuItem("orb_Draw_AARange", "AA Circle").SetValue(new Circle(true, Color.FloralWhite)));
-            menuDrawing.AddItem(new MenuItem("orb_Draw_AARange_Enemy", "AA Circle Enemy").SetValue(new Circle(true, Color.Pink)));
-            menuDrawing.AddItem(new MenuItem("orb_Draw_Holdzone", "Holdzone").SetValue(new Circle(true, Color.FloralWhite)));
+            menuDrawing.AddItem(new MenuItem("orb_Draw_AARange", "AA Circle").SetValue(new Circle(true, Color.BlueViolet)));
+            menuDrawing.AddItem(new MenuItem("orb_Draw_AARange_Enemy", "AA Circle Enemy").SetValue(new Circle(false, Color.Pink)));
+            menuDrawing.AddItem(new MenuItem("orb_Draw_Holdzone", "Holdzone").SetValue(new Circle(false, Color.FloralWhite)));
             menuDrawing.AddItem(new MenuItem("orb_Draw_MinionHPBar", "Minion HPBar").SetValue(new Circle(true, Color.Black)));
             menuDrawing.AddItem(new MenuItem("orb_Draw_MinionHPBar_thickness", "^ HPBar Thickness").SetValue(new Slider(1, 1, 3)));
-            menuDrawing.AddItem(new MenuItem("orb_Draw_hitbox", "Show HitBoxes").SetValue(new Circle(true, Color.FloralWhite)));
+            menuDrawing.AddItem(new MenuItem("orb_Draw_hitbox", "Show HitBoxes").SetValue(new Circle(false, Color.FloralWhite)));
             menuDrawing.AddItem(new MenuItem("orb_Draw_Lasthit", "Minion Lasthit").SetValue(new Circle(true, Color.Lime)));
             menuDrawing.AddItem(new MenuItem("orb_Draw_nearKill", "Minion nearKill").SetValue(new Circle(true, Color.Gold)));
             menu.AddSubMenu(menuDrawing);
@@ -78,9 +78,9 @@ namespace GagongSyndra
             menuMisc.AddItem(new MenuItem("orb_Misc_Holdzone", "Hold Position").SetValue(new Slider(50, 100, 0)));
             menuMisc.AddItem(new MenuItem("orb_Misc_Farmdelay", "Farm Delay").SetValue(new Slider(0, 200, 0)));
             menuMisc.AddItem(new MenuItem("orb_Misc_ExtraWindUp", "Extra Winduptime").SetValue(new Slider(80, 200, 0)));
-            menuMisc.AddItem(new MenuItem("orb_Misc_AutoWindUp", "Autoset Windup").SetValue(false));
+            menuMisc.AddItem(new MenuItem("orb_Misc_AutoWindUp", "Autoset Windup").SetValue(true));
             menuMisc.AddItem(new MenuItem("orb_Misc_Priority_Unit", "Priority Unit").SetValue(new StringList(new[] { "Minion", "Hero" })));
-            menuMisc.AddItem(new MenuItem("orb_Misc_Humanizer", "Humanizer Delay").SetValue(new Slider(80, 200, 15)));
+            menuMisc.AddItem(new MenuItem("orb_Misc_Humanizer", "Humanizer Delay").SetValue(new Slider(50, 200, 15)));
             menuMisc.AddItem(new MenuItem("orb_Misc_AllMovementDisabled", "Disable All Movement").SetValue(false));
             menuMisc.AddItem(new MenuItem("orb_Misc_AllAttackDisabled", "Disable All Attacks").SetValue(false));
 
@@ -90,7 +90,7 @@ namespace GagongSyndra
             menuMelee.AddItem(new MenuItem("orb_Melee_Prediction", "Movement Prediction").SetValue(false));
             menu.AddSubMenu(menuMelee);
 
-            var menuModes = new Menu("Orbwalk Mode", "orb_Modes");
+            var menuModes = new Menu("Orbwalk Mode / KeyBinds", "orb_Modes");
             {
                 var modeCombo = new Menu("Combo", "orb_Modes_Combo");
                 modeCombo.AddItem(new MenuItem("Combo_Key", "Key").SetValue(new KeyBind(32, KeyBindType.Press)));
@@ -105,14 +105,14 @@ namespace GagongSyndra
                 modeHarass.AddItem(new MenuItem("Harass_Lasthit", "Lasthit Minions").SetValue(true));
                 menuModes.AddSubMenu(modeHarass);
 
-                var modeLaneClear = new Menu("LaneClear", "orb_Modes_LaneClear");
+                var modeLaneClear = new Menu("LaneClear/JungleFarm", "orb_Modes_LaneClear");
                 modeLaneClear.AddItem(new MenuItem("LaneClear_Key", "Key").SetValue(new KeyBind("V".ToCharArray()[0], KeyBindType.Press)));
                 modeLaneClear.AddItem(new MenuItem("LaneClear_move", "Movement").SetValue(true));
                 modeLaneClear.AddItem(new MenuItem("LaneClear_attack", "Attack").SetValue(true));
                 menuModes.AddSubMenu(modeLaneClear);
 
                 var modeLaneFreeze = new Menu("LaneFreeze", "orb_Modes_LaneFreeze");
-                modeLaneFreeze.AddItem(new MenuItem("LaneFreeze_Key", "Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
+                modeLaneFreeze.AddItem(new MenuItem("LaneFreeze_Key", "Key").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Press)));
                 modeLaneFreeze.AddItem(new MenuItem("LaneFreeze_move", "Movement").SetValue(true));
                 modeLaneFreeze.AddItem(new MenuItem("LaneFreeze_attack", "Attack").SetValue(true));
                 menuModes.AddSubMenu(modeLaneFreeze);
@@ -124,7 +124,7 @@ namespace GagongSyndra
                 menuModes.AddSubMenu(modeLasthit);
 
                 var modeFlee = new Menu("Flee", "orb_Modes_Flee");
-                modeFlee.AddItem(new MenuItem("Flee_Key", "Key").SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press)));
+                modeFlee.AddItem(new MenuItem("Flee_Key", "Key").SetValue(new KeyBind("G".ToCharArray()[0], KeyBindType.Press)));
                 menuModes.AddSubMenu(modeFlee);
             }
             menu.AddSubMenu(menuModes);
@@ -211,9 +211,9 @@ namespace GagongSyndra
                 {
                     var attackToKill = Math.Ceiling(minion.MaxHealth / MyHero.GetAutoAttackDamage(minion, true));
                     var hpBarPosition = minion.HPBarPosition;
-                    var barWidth = minion.IsMelee() ? 75 : 80;
+                    var barWidth = minion.IsMelee() ? 71 : 76;
                     if (minion.HasBuff("turretshield", true))
-                        barWidth = 70;
+                        barWidth = 67;
                     var barDistance = (float)(barWidth / attackToKill);
                     if (Menu.Item("orb_Draw_MinionHPBar").GetValue<Circle>().Active)
                     {
@@ -221,7 +221,7 @@ namespace GagongSyndra
                         {
                             var startposition = hpBarPosition.X + 45 + barDistance * i;
                             Drawing.DrawLine(
-                                new Vector2(startposition, hpBarPosition.Y + 18),
+                                new Vector2(startposition, hpBarPosition.Y + 19),
                                 new Vector2(startposition, hpBarPosition.Y + 23),
                                 Menu.Item("orb_Draw_MinionHPBar_thickness").GetValue<Slider>().Value,
                                 Menu.Item("orb_Draw_MinionHPBar").GetValue<Circle>().Color);
