@@ -77,7 +77,7 @@ namespace GagongSyndra
             R.SetTargetted(0.5f, 1100f);
 
             QE = new Spell(SpellSlot.E, 1292);
-            QE.SetSkillshot(0.98f, 50f, 2500f, false, SkillshotType.SkillshotLine);
+            QE.SetSkillshot(0.98f, 50f, 5500f, false, SkillshotType.SkillshotLine);
 
 
             IgniteSlot = Player.GetSpellSlot("SummonerDot");
@@ -842,7 +842,7 @@ namespace GagongSyndra
             if (Player.Distance(SPos, true) > Math.Pow(E.Range, 2))
             {
                 Vector3 orb = Player.ServerPosition + Vector3.Normalize(SPos - Player.ServerPosition) * E.Range;
-                QE.Delay = 0;
+                QE.Delay = E.Delay + Player.Distance(orb) / E.Speed;
                 var TPos = QE.GetPrediction(Target);
                 if (TPos.Hitchance >= HitChance.Medium)
                 {
@@ -962,7 +962,7 @@ namespace GagongSyndra
                 {
                     Color color = Color.Red;
                     Vector3 orb = Player.Position + Vector3.Normalize(SPos - Player.Position) * E.Range;
-                    QE.Delay = 0;
+                    QE.Delay = E.Delay + Player.Distance(orb) / E.Speed;
                     var TPos = QE.GetPrediction(QETarget);
                     if (TPos.Hitchance >= HitChance.Medium) color = Color.Green;
                     if(Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost + Player.Spellbook.GetSpell(SpellSlot.E).ManaCost > Player.Mana) color = Color.DarkBlue;
