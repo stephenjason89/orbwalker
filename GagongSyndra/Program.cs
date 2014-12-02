@@ -25,6 +25,10 @@ namespace GagongSyndra
         private static SoundPlayer ilovethisgame = new SoundPlayer(GagongSyndra.Properties.Resources.ILoveThisGame);
         private static int LastPlayedSound = 0;
 
+        //Collision
+        private static int WallCastT;
+        private static Vector2 YasuoWallCastedPos;
+
         //Create spells
         private static List<Spell> SpellList = new List<Spell>();
         private static Spell Q;
@@ -77,7 +81,7 @@ namespace GagongSyndra
             R.SetTargetted(0.5f, 1100f);
 
             QE = new Spell(SpellSlot.E, 1292);
-            QE.SetSkillshot(0.98f, 50f, 5500f, false, SkillshotType.SkillshotLine);
+            QE.SetSkillshot(0.98f, 55f, 6500f, false, SkillshotType.SkillshotLine);
 
 
             IgniteSlot = Player.GetSpellSlot("SummonerDot");
@@ -113,6 +117,7 @@ namespace GagongSyndra
             Menu.AddSubMenu(new Menu("Harass", "Harass"));
             Menu.SubMenu("Harass").AddItem(new MenuItem("UseQH", "Use Q").SetValue(true));
             Menu.SubMenu("Harass").AddItem(new MenuItem("HarassAAQ", "Harass with Q if enemy AA").SetValue(false));
+            Menu.SubMenu("Harass").AddItem(new MenuItem("HarassTurret", "Disable Harass if Inside Enemy Turret").SetValue(false));
             Menu.SubMenu("Harass").AddItem(new MenuItem("UseWH", "Use W").SetValue(false));
             Menu.SubMenu("Harass").AddItem(new MenuItem("UseEH", "Use E").SetValue(false));
             Menu.SubMenu("Harass").AddItem(new MenuItem("UseQEH", "Use QE").SetValue(false));
@@ -234,6 +239,52 @@ namespace GagongSyndra
                 Game.PrintChat("xSLx Orbwalker Loaded");
             }
         }
+        private static bool detectCollision(Obj_AI_Hero target)
+        {
+            GameObject wall = null;
+            foreach (var gameObject in ObjectManager.Get<GameObject>())
+            {
+                Game.PrintChat(gameObject.Name);
+                
+                if (gameObject.IsValid &&
+                    System.Text.RegularExpressions.Regex.IsMatch(
+                        gameObject.Name, "_w_windwall.\\.troy",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    Game.PrintChat("---------------------"+gameObject.Name);
+                    wall = gameObject;
+                    Game.PrintChat("WALL OBJECT");
+                }
+            }
+            if (wall == null)
+            {
+                Game.PrintChat("WALL NOT DETECTED");
+                return true;
+
+            }
+            else Game.PrintChat("WWW");
+            var level = wall.Name.Substring(wall.Name.Length - 6, 1);
+            var wallWidth = (300 + 50 * Convert.ToInt32(level));
+
+
+            var wallDirection = (wall.Position.To2D() - YasuoWallCastedPos).Normalized().Perpendicular();
+            var wallStart = wall.Position.To2D() + wallWidth / 2 * wallDirection;
+            var wallEnd = wallStart - wallWidth * wallDirection;
+            
+            var intersection = Geometry.Intersection(wallStart, wallEnd, Player.Position.To2D(), target.Position.To2D());
+            var intersections = new List<Vector2>();
+
+            if (intersection.Point.IsValid() && Environment.TickCount + Game.Ping + R.Delay - WallCastT < 4000)
+            {
+                Game.PrintChat("WALL DETECTED!!");
+                return false;
+            }
+            else
+            {
+                Game.PrintChat("WALL DETECTED BUT WONT COLLIDE");
+                return true;
+            }
+        }
         private static void playSound(SoundPlayer sound = null)
         {
             if (sound != null)
@@ -315,7 +366,12 @@ namespace GagongSyndra
             //Harass
             else if (harassKey.GetValue<KeyBind>().Active || Menu.Item("HarassActiveT").GetValue<KeyBind>().Active)
             {
-                Harass();
+                if (Menu.Item("HarassTurret").GetValue<bool>())
+                {
+                    var turret = ObjectManager.Get<Obj_AI_Turret>().FirstOrDefault(t => t.IsValidTarget(Q.Range));
+                    if (turret == null) Harass();
+                }
+                else Harass();
             }
             //Auto KS
             if (Menu.Item("AutoKST").GetValue<KeyBind>().Active)
@@ -459,6 +515,11 @@ namespace GagongSyndra
             if (Menu.Item("HarassAAQ").GetValue<bool>() && sender.Type == Player.Type && sender.Team != Player.Team && args.SData.Name.ToLower().Contains("attack") && Player.Distance(sender, true) <= Math.Pow(Q.Range, 2) && Player.Mana / Player.MaxMana * 100 > Menu.Item("HarassMana").GetValue<Slider>().Value)  
             {
                 UseQ((Obj_AI_Hero)sender);
+            }
+            if (sender.IsValid && sender.Team != ObjectManager.Player.Team && args.SData.Name == "YasuoWMovingWall")
+            {
+                WallCastT = Environment.TickCount;
+                YasuoWallCastedPos = sender.ServerPosition.To2D();
             }
         }
         
@@ -706,7 +767,6 @@ namespace GagongSyndra
             var RTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
             var QETarget = SimpleTs.GetTarget(QE.Range, SimpleTs.DamageType.Magical);
             bool UseR = false;
-            
             //Use DFG
             if (DFG.IsReady() && RTarget != null && GetComboDamage(RTarget, UQ, UW, UE, UR) + GetIgniteDamage(RTarget) > RTarget.Health)
             {
@@ -851,7 +911,9 @@ namespace GagongSyndra
             }
             else
             {
+                Q.Width = 40f;
                 PredictionOutput Pos = Q.GetPrediction(Target, true);
+                Q.Width = 125f;
                 if (Pos.Hitchance >= HitChance.VeryHigh)
                     UseQE2(Target, Pos.UnitPosition);
             }
