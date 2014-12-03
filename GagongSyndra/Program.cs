@@ -69,10 +69,10 @@ namespace GagongSyndra
             
             //Spells data
             Q = new Spell(SpellSlot.Q, 800);
-            Q.SetSkillshot(0.74f, 125f, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Q.SetSkillshot(0.65f, 122f, float.MaxValue, false, SkillshotType.SkillshotCircle);
 
-            W = new Spell(SpellSlot.W, 930);
-            W.SetSkillshot(0.25f, 140f, 1400f, false, SkillshotType.SkillshotCircle);
+            W = new Spell(SpellSlot.W, 925);
+            W.SetSkillshot(0.75f, 120f, 1500f, false, SkillshotType.SkillshotCircle);
 
             E = new Spell(SpellSlot.E, 700);
             E.SetSkillshot(0.25f, (float)(45 * 0.5), 2500, false, SkillshotType.SkillshotCone);         
@@ -81,7 +81,7 @@ namespace GagongSyndra
             R.SetTargetted(0.5f, 1100f);
 
             QE = new Spell(SpellSlot.E, 1292);
-            QE.SetSkillshot(0.98f, 55f, 6500f, false, SkillshotType.SkillshotLine);
+            QE.SetSkillshot(0.98f, 55f, 9000f, false, SkillshotType.SkillshotLine);
 
 
             IgniteSlot = Player.GetSpellSlot("SummonerDot");
@@ -859,13 +859,13 @@ namespace GagongSyndra
             {
                 Vector3 gObjectPos = GetGrabableObjectPos(false);
 
-                if (gObjectPos.To2D().IsValid() && Environment.TickCount - Q.LastCastAttemptT > Game.Ping && Environment.TickCount - E.LastCastAttemptT > 750 + Game.Ping && Environment.TickCount - W.LastCastAttemptT > 600 + Game.Ping)
+                if (gObjectPos.To2D().IsValid() && Environment.TickCount - Q.LastCastAttemptT > Game.Ping + 150 && Environment.TickCount - E.LastCastAttemptT > 750 + Game.Ping && Environment.TickCount - W.LastCastAttemptT > 750 + Game.Ping)
                 {
                     bool grabsomething = false;
                     if (WTarget != null)
                     {
                         PredictionOutput Pos2 = W.GetPrediction(WTarget, true);
-                        if (Pos2.Hitchance >= HitChance.Low) grabsomething = true;
+                        if (Pos2.Hitchance >= HitChance.High) grabsomething = true;
                     }
                     if (grabsomething || QETarget.IsStunned)
                         W.Cast(gObjectPos, Menu.Item("Packets").GetValue<bool>());
@@ -898,11 +898,11 @@ namespace GagongSyndra
         private static void UseQE(Obj_AI_Hero Target)
         {
             if (!Q.IsReady() || !E.IsReady()) return;
-            Vector3 SPos = Prediction.GetPrediction(Target, E.Delay).UnitPosition;
+            Vector3 SPos = Prediction.GetPrediction(Target, Q.Delay + E.Delay).UnitPosition;
             if (Player.Distance(SPos, true) > Math.Pow(E.Range, 2))
             {
                 Vector3 orb = Player.ServerPosition + Vector3.Normalize(SPos - Player.ServerPosition) * E.Range;
-                QE.Delay = E.Delay + Player.Distance(orb) / E.Speed;
+                QE.Delay = Q.Delay + E.Delay + Player.Distance(orb) / E.Speed;
                 var TPos = QE.GetPrediction(Target);
                 if (TPos.Hitchance >= HitChance.Medium)
                 {
@@ -924,7 +924,7 @@ namespace GagongSyndra
             {
                 Vector3 SP = Pos + Vector3.Normalize(Player.ServerPosition - Pos) * 100f;
                 Vector3 EP = Pos + Vector3.Normalize(Pos - Player.ServerPosition) * 592;
-                QE.Delay = E.Delay + Player.ServerPosition.Distance(Pos) / E.Speed;
+                QE.Delay = Q.Delay + E.Delay + Player.ServerPosition.Distance(Pos) / E.Speed;
                 QE.UpdateSourcePosition(Pos);
                 var PPo = QE.GetPrediction(Target).UnitPosition.To2D().ProjectOn(SP.To2D(), EP.To2D());
                 if (PPo.IsOnSegment && PPo.SegmentPoint.Distance(Target, true) <= Math.Pow(QE.Width + Target.BoundingRadius, 2))
@@ -1019,12 +1019,12 @@ namespace GagongSyndra
             // Draw QE MAP
             if (Menu.Item("DrawQEMAP").GetValue<bool>()) { 
                 var QETarget = SimpleTs.GetTarget(QE.Range, SimpleTs.DamageType.Magical);
-                Vector3 SPos = Prediction.GetPrediction(QETarget, E.Delay).UnitPosition;
+                Vector3 SPos = Prediction.GetPrediction(QETarget, Q.Delay + E.Delay).UnitPosition;
                 if (Player.Distance(SPos, true) > Math.Pow(E.Range, 2) && (E.IsReady() || Player.Spellbook.GetSpell(SpellSlot.E).CooldownExpires - Game.Time < 2) && Player.Spellbook.GetSpell(SpellSlot.E).Level>0)
                 {
                     Color color = Color.Red;
                     Vector3 orb = Player.Position + Vector3.Normalize(SPos - Player.Position) * E.Range;
-                    QE.Delay = E.Delay + Player.Distance(orb) / E.Speed;
+                    QE.Delay = Q.Delay + E.Delay + Player.Distance(orb) / E.Speed;
                     var TPos = QE.GetPrediction(QETarget);
                     if (TPos.Hitchance >= HitChance.Medium) color = Color.Green;
                     if(Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost + Player.Spellbook.GetSpell(SpellSlot.E).ManaCost > Player.Mana) color = Color.DarkBlue;
